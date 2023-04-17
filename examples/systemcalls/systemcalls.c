@@ -1,4 +1,12 @@
+# include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "systemcalls.h"
+
 
 /**
  * @param cmd the command to execute with system()
@@ -9,15 +17,18 @@
 */
 bool do_system(const char *cmd)
 {
-
-/*
- * TODO  add your code here
- *  Call the system() function with the command set in the cmd
- *   and return a boolean true if the system() call completed with success
- *   or false() if it returned a failure
-*/
-
-    return true;
+    // Call the system() function with the command set in the cmd
+    int ret = system(cmd);
+    // and return a boolean true if the system() call completed with success
+    if (ret == 0)
+    {
+        return true;
+    }
+    // or false() if it returned a failure
+    else
+    {
+        return false;
+    }
 }
 
 /**
@@ -50,7 +61,6 @@ bool do_exec(int count, ...)
     command[count] = command[count];
 
 /*
- * TODO:
  *   Execute a system command by calling fork, execv(),
  *   and wait instead of system (see LSP page 161).
  *   Use the command[0] as the full path to the command to execute
@@ -58,10 +68,36 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    pid_t pid = fork();
+    int child_status;
+
+    // fork returns -1 on error
+    if (pid == -1)
+    {
+        return false;
+    } 
+    // fork returns 0 in the child
+    else if (pid == 0)
+    {
+        // in child execute the command
+        execv(command[0], command);
+        // error
+        exit(-1);
+    }
+    // fork returns the pid of the child in the parent
+    else
+    {
+        // wait for completion of child process
+        pid_t child_pid = waitpid(pid, &child_status, 0);
+        if (child_pid < 0)
+        {
+            return false;
+        }
+    }
 
     va_end(args);
 
-    return true;
+    return WEXITSTATUS(child_status) == 0;
 }
 
 /**
@@ -93,7 +129,50 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *
 */
 
+    int fd = open(outputfile, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+
+    if (fd < 0)
+    {
+        return false;
+    }
+
+    pid_t pid = fork();
+    int child_status;
+
+    // fork returns -1 on error
+    if (pid == -1)
+    {
+        close(fd);
+        return false;
+    } 
+    // fork returns 0 in the child
+    else if (pid == 0)
+    {
+        if (dup2(fd, STDOUT_FILENO) < 0)
+        {
+            exit(-1);
+        }
+        close(fd);
+        // in child execute the command
+        execv(command[0], command);
+        // error
+        exit(-1);
+    }
+    // fork returns the pid of the child in the parent
+    else
+    {
+        close(fd);
+        // wait for completion of child process
+        pid_t child_pid = waitpid(pid, &child_status, 0);
+        if (child_pid < 0)
+        {
+            return false;
+        }
+
+
+    }
+
     va_end(args);
 
-    return true;
+    return WEXITSTATUS(child_status);
 }
