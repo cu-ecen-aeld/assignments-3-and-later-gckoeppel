@@ -32,24 +32,20 @@ echo "Writing ${NUMFILES} files containing string ${WRITESTR} to ${WRITEDIR}"
 rm -rf "${WRITEDIR}"
 
 # create $WRITEDIR if not assignment1
-assignment=`cat ../conf/assignment.txt`
+mkdir -p "$WRITEDIR"
 
-if [ $assignment != 'assignment1' ]
+#The WRITEDIR is in quotes because if the directory path consists of spaces, then variable substitution will consider it as multiple argument.
+#The quotes signify that the entire string in WRITEDIR is a single string.
+#This issue can also be resolved by using double square brackets i.e [[ ]] instead of using quotes.
+if [ -d "$WRITEDIR" ]
 then
-	mkdir -p "$WRITEDIR"
-
-	#The WRITEDIR is in quotes because if the directory path consists of spaces, then variable substitution will consider it as multiple argument.
-	#The quotes signify that the entire string in WRITEDIR is a single string.
-	#This issue can also be resolved by using double square brackets i.e [[ ]] instead of using quotes.
-	if [ -d "$WRITEDIR" ]
-	then
-		echo "$WRITEDIR created"
-	else
-		exit 1
-	fi
+	echo "$WRITEDIR created"
+else
+	exit 1
 fi
+
 #echo "Removing the old writer utility and compiling as a native application"
-make clean
+# make clean
 # make
 
 for i in $( seq 1 $NUMFILES)
@@ -73,3 +69,4 @@ else
 	echo "failed: expected  ${MATCHSTR} in ${OUTPUTSTRING} but instead found"
 	exit 1
 fi
+
