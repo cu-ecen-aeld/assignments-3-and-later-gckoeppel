@@ -1,13 +1,16 @@
 CC=$(CROSS_COMPILE)gcc
 CFLAGS=-g -Wall
+LDFLAGS=
 
-default: writer
+OBJ=writer.o
 
-writer.o: writer.c
-	$(CC) $(CFLAGS) -c writer.c -o writer.o
+all: writer
 
-writer: writer.o
-	$(CC) $(CFLAGS) writer.o -o writer
+writer: $(OBJ)
+	$(CC) $(CFLAGS) -o writer $(OBJ) $(LDFLAGS)
+
+%o: %c
+	$(CC) $(CFLAGS) -c $<
 
 clean:
 	rm -f writer.o
