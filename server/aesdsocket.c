@@ -108,6 +108,7 @@ int main(int argc, char* argv[])
 	// setup syslog
 	openlog(NULL, 0, LOG_USER);
 	syslog(LOG_INFO, "Start logging");
+    printf("Start aesd socket\n");
 
     // setup signal handler
     new_action.sa_handler=signal_handler;
@@ -122,8 +123,7 @@ int main(int argc, char* argv[])
         return -1;
     }
     run_server = true;
-
-
+    
     // open stream socket bound to port 9000
     sockfd = socket(PF_INET, SOCK_STREAM, 0);
     if(sockfd == -1)
@@ -135,6 +135,7 @@ int main(int argc, char* argv[])
     // setup sockaddr
     memset(&hints, 0, sizeof hints);
     hints.ai_flags = AI_PASSIVE;
+    hints.ai_family = AF_INET;
     ret = getaddrinfo(NULL, "9000", &hints, &servinfo);
     if (ret != 0)
     {
@@ -144,6 +145,7 @@ int main(int argc, char* argv[])
     }
 
     // bind to open socked using created sockaddr
+    //ret = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
     ret = bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
     if(ret == -1)
     {
